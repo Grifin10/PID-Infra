@@ -1,0 +1,12 @@
+# If you have a domain pointed at the VPS, use it here and Caddy will
+# automatically get you a free HTTPS certificate. No domain yet? Replace
+# the line below with ":80" and it'll just serve plain HTTP on the VPS IP.
+
+yourdomain.com {
+    handle /api/* {
+        reverse_proxy backend:4000
+    }
+    handle {
+        reverse_proxy frontend:80
+    }
+}

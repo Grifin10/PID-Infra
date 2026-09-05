@@ -1,0 +1,53 @@
+# Local development, run from your Mac (or your teammates' machines).
+# Builds from source instead of pulling from GHCR, so you don't need to
+# push an image just to test a change.
+#
+# Usage: this file lives in PID-Infra, which sits alongside PID-Front
+# and PID-Back under the same parent folder. From inside
+# PID-Infra, run:
+#   docker compose -f docker-compose.dev.yml up --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"   # exposed locally so you can inspect with a DB client
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ../PID-Back
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://appuser:devpassword@postgres:5432/appdb
+      NODE_ENV: development
+    volumes:
+      - ../PID-Back:/app
+      - /app/node_modules
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ../PID-Front
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    volumes:
+      - ../PID-Front:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata_dev:

@@ -1,0 +1,56 @@
+# Lives in the `infra` repo, deployed on the VPS.
+# Pulls pre-built images from GHCR (built by CI in the frontend/backend repos).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+    # No "ports:" here on purpose — Postgres is only reachable
+    # from other containers on the internal network, not the internet.
+
+  backend:
+    image: ghcr.io/OWNER/backend:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      - postgres
+    networks:
+      - internal
+
+  frontend:
+    image: ghcr.io/OWNER/frontend:latest
+    restart: unless-stopped
+    networks:
+      - internal
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - internal
+
+volumes:
+  pgdata:
+  caddy_data:
+
+networks:
+  internal:
