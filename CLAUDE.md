@@ -35,6 +35,18 @@ A web app (responsive — must work well on phone too) that connects students an
 - Production frontend container is nginx-based with a `try_files` fallback so React Router routes work on refresh/direct URL.
 - Postgres must **not** be exposed on a public port in production compose — only reachable from the backend container.
 - `.gitattributes` is in place in all three repos to normalize line endings across Mac/Windows contributors.
+- **After changing dependencies, rebuild with `-V` — `--build` alone is not enough.** Both app services mount an anonymous volume at `/app/node_modules` (so the host bind mount of the source doesn't shadow the container's install). Docker seeds that volume from the image **only the first time it is created**; after that it persists and hides whatever a rebuilt image contains. So `up --build` updates the image while the container keeps running the *old* dependency tree. Symptom: Vite fails with `Failed to resolve import "<some-package>"` even though the package is in `package.json` and the build just succeeded. Fix:
+  ```
+  docker compose -f docker-compose.dev.yml up --build -V
+  ```
+  `-V` (`--renew-anon-volumes`) refreshes only anonymous volumes — the named `pgdata_dev` volume is untouched. **Do not use `down -v` for this**: that deletes `pgdata_dev` and wipes the database. To confirm a volume is stale, compare the image against the running container:
+  ```
+  docker run --rm pid-infra-frontend sh -c 'ls /app/node_modules | wc -l'
+  docker exec pid-infra-frontend-1 sh -c 'ls /app/node_modules | wc -l'
+  ```
+  Different counts = stale volume.
+- **`npm ci` failing with `Cannot read properties of null (reading 'edgesOut')` during a compose build is not a Docker problem** — it means `package.json` and `package-lock.json` are out of sync in that app repo. `node:20-alpine` ships npm 10.8.2, which crashes with that unhelpful message instead of printing the usual "lock file out of sync" error. Fix in the app repo (not here): run `npm install`, then commit the regenerated lockfile.
+- If `127.0.0.1:5173` and `localhost:5173` show **different apps**, another process is bound to `[::1]:5173`. On macOS `localhost` resolves to `::1` first, and a specific `[::1]` bind beats Docker's wildcard `*:5173` bind — so `localhost` serves the stray process (typically another project's forgotten `vite` dev server) while `127.0.0.1` serves our container. Diagnose with `lsof -nP -iTCP:5173 -sTCP:LISTEN`. This is why the ports above are written as `127.0.0.1`.
 - Watch for `package-lock.json` accidentally getting committed into this repo — it belongs in `PID-Front`/`PID-Back` only, and has landed here by mistake from a wrong-directory `npm install`.
 
 ## Related repos
