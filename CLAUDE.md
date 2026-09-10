@@ -8,6 +8,14 @@ Shared context for Claude Code across the team. This file lives at the root of *
 - Three repos, cloned side by side inside a parent `Proyecto/` folder: `PID-Front`, `PID-Back`, `PID-Infra` (this one).
 - Team works across Apple Silicon Macs (M1/M2) and at least one Windows desktop — keep cross-platform tooling in mind (line endings, shell scripts, etc.).
 
+## App concept
+A web app (responsive — must work well on phone too) that connects students and teachers.
+- **Single account type**: role (`teacher` or `student`) is chosen at signup, not separate signup flows.
+- **Teachers**: pick which subjects they teach from a fixed list of available subjects, and set their availability — specific dates and start times. Classes are always **1 hour long**, and can only start on the hour or half-hour (`:00` or `:30`).
+- **Students**: search/browse teachers, view their profile and subjects, see which teachers are available and their open class slots.
+- **Booking**: a student picking a slot **reserves it** — it disappears from availability for other students once booked.
+- **Payments/pricing**: out of scope for this version — no external payment provider to provision for.
+
 ## Tech stack (this repo)
 - **Docker + Docker Compose** for both local dev and production.
 - **GitHub Container Registry (GHCR)** hosts built images.
