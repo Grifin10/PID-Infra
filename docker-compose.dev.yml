@@ -24,6 +24,9 @@ services:
     environment:
       DATABASE_URL: postgresql://appuser:devpassword@postgres:5432/appdb
       NODE_ENV: development
+      # Dev-only placeholder. Generate a real secret per environment:
+      #   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+      COOKIE_SECRET: 3db1ffb95e688d1c849d4eef3d88c9bb1f4e5ba879e9e9fd380f70fdf3a9c12e
     volumes:
       - ../PID-Back:/app
       - /app/node_modules
@@ -37,6 +40,10 @@ services:
       context: ../PID-Front
       dockerfile: Dockerfile.dev
     restart: unless-stopped
+    environment:
+      # Points the Vite dev proxy at the backend container instead of the
+      # 127.0.0.1 default, which only works outside Docker.
+      VITE_BACKEND_URL: http://backend:4000
     volumes:
       - ../PID-Front:/app
       - /app/node_modules
