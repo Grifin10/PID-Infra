@@ -7,6 +7,7 @@ Shared context for Claude Code across the team. This file lives at the root of *
 - Professor's constraint: no managed/PaaS platforms — the app must run via Docker and be continuously deployed so it can be reviewed at any time.
 - Three repos, cloned side by side inside a parent `Proyecto/` folder: `PID-Front`, `PID-Back`, `PID-Infra` (this one).
 - Team works across Apple Silicon Macs (M1/M2) and at least one Windows desktop — keep cross-platform tooling in mind (line endings, shell scripts, etc.).
+- **The app is in Spanish.** The team and its users are Argentinian, and everything user-facing is rioplatense Spanish. Infra rarely renders text, but it owns the places that silently break accents: keep containers and Postgres on UTF-8 (`es-AR` copy is full of `á é í ó ú ñ`), and if a proxy or error page ever serves text of its own, write it in Spanish too.
 
 ## App concept
 A web app (responsive — must work well on phone too) that connects students and teachers.
