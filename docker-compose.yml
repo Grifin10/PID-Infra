@@ -22,6 +22,9 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # Without this the session cookie's `secure` flag stays false and the
+      # cookie would be sent over plain HTTP. Caddy terminates TLS in front.
+      NODE_ENV: production
     depends_on:
       - postgres
     networks:
